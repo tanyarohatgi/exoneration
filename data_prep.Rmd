@@ -16,5 +16,22 @@ library(readxl)
 
 exon <- read_excel("publicspreadsheet.xlsx") %>%
   clean_names()
+
+# CLEANING DATA:
+
+e <- exon %>%
+  select(-c(list_addl_crimes_recode, posting_date)) %>%
+  mutate(dna = str_to_lower(dna), x = str_to_lower(x), fc = str_to_lower(fc), mwid = str_to_lower(mwid), 
+         f_mfe = str_to_lower(f_mfe), p_fa = str_to_lower(p_fa), om = str_to_lower(om), 
+         ild = str_to_lower(ild)) %>%
+  unite("basis", dna:ild, sep = "; ", remove = TRUE) %>%
+  mutate(basis = str_replace_all(basis, "NA;", "")) %>%
+  mutate(basis = str_to_upper(basis)) %>%
+  mutate(tags = str_replace_all(tags, "#", " "))
+
+```
+
+```{r}
+
 ```
 
