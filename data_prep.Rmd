@@ -19,19 +19,62 @@ exon <- read_excel("publicspreadsheet.xlsx") %>%
 
 # CLEANING DATA:
 
+exon$exonerated <- as.numeric(exon$exonerated)
+exon$convicted <- as.numeric(exon$convicted)
+
 e <- exon %>%
   select(-c(list_addl_crimes_recode, posting_date)) %>%
+  mutate(served = exonerated - convicted) %>%
   mutate(dna = str_to_lower(dna), x = str_to_lower(x), fc = str_to_lower(fc), mwid = str_to_lower(mwid), 
          f_mfe = str_to_lower(f_mfe), p_fa = str_to_lower(p_fa), om = str_to_lower(om), 
          ild = str_to_lower(ild)) %>%
   unite("basis", dna:ild, sep = "; ", remove = TRUE) %>%
   mutate(basis = str_replace_all(basis, "NA;", "")) %>%
+  mutate(basis = str_replace_all(basis, "NA", "")) %>%
   mutate(basis = str_to_upper(basis)) %>%
   mutate(tags = str_replace_all(tags, "#", " "))
+
+# We must take the 'served' variable as approximations because we do not know exactly when after conviction individuals were sentenced and incarcerated. Usually, however, the maximum time elapsed between the two is 90 days for federal crimes (lower for other crimes). Therefore, by creating this variable using conviction date, we can illustrate a general sense of time served before exoneration. 
 
 ```
 
 ```{r}
 
+#ILD:
+
+e1 <- e %>%
+  mutate(ild1 = ifelse(str_detect(basis, "ILD"), T, F)) %>%
+  filter(ild1 == T)
+
+r1 <- e %>%
+  count(race)
+
+r2 <- e1 %>%
+  count(race)
+
+r <- left_join(r1, r2, by = "race") %>%
+  mutate(p = (n.y/n.x)*100) %>%
+  mutate_if(is.numeric, round, 1) %>%
+  gather("count.type", "value", n.x, n.y)
+
+r %>%
+  ggplot(aes(race, value, fill = as.factor(count.type))) + geom_bar(stat="identity", position="dodge") +
+  ggtitle("Exonerations Involving Initial Insuffient Legal Defense (ILD), by Race:") + 
+  labs(subtitle = "Comparative view of total exonerations and those based, at least in part, on ILD during trial.") + xlab("") + ylab("") + theme_minimal()
+
+e %>%
+  filter(str_detect(tags, "CIU")) %>%
+  ggplot(aes(state)) + geom_bar(aes(fill = race)) + scale_y_continuous(name = "Count") +
+  theme_minimal() + theme(axis.text.x = element_text(angle=60, hjust=1)) +
+  xlab("") + ylab("")
+
+e %>%
+  filter(str_detect(tags, "CIU")) %>%
+  ggplot(aes(race)) + geom_bar(aes(fill = race)) + facet_wrap(~state, scales = "free_y") +
+   theme_minimal() + theme(axis.text.x = element_text(angle=60, hjust=1)) +
+  xlab("") + ylab("")
+ 
+
+# Next, SHOW CIU EXONERATIONS AS PERCENTAGE OF TOTAL EXONERATIONS IN THAT STATE.
 ```
 
