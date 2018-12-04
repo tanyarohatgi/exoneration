@@ -51,8 +51,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
                     selectInput(inputId = "a",
                                 label = "Select Variable to Examine Exoneration Through the Years:",
                                 choices = c("Type of Crime" = "by_crime1$crime_type", "Race of Exoneree" = "by_crime1$race",
-                                            "Sex of Exoneree (Time of Conviction)" = "by_crime1$sex", 
-                                            "Time Served" = "by_crime1$served")
+                                            "Sex of Exoneree (Time of Conviction)" = "by_crime1$sex")
                   
                   
                 )),
@@ -130,12 +129,12 @@ server <- function(input, output) {
   
   output$PlotA <- renderPlot({ 
   
-  by_crime %>%
+  by_crime1 %>%
     ggplot(aes_string("exonerated")) + geom_bar(aes_string(fill = input$a), width = 0.9) + theme_minimal() + 
     theme(legend.position = "bottom") +
     xlab("") + ylab("") + labs(fill = "") +
     ggtitle("U.S. Exonerations, 1989 - 2018:") +
-    labs(subtitle = "Break-Downs by Type of Crime, Approx. Time Served, and Demograhic Characteristics.")
+    labs(subtitle = "Break-Downs by Type of Crime and Demograhic Characteristics.")
  
    })
   
@@ -168,13 +167,37 @@ server <- function(input, output) {
   
   output$PlotD <- renderPlot({
     
-    options <- reactive({ 
+    t4 <- reactive({
+      
+      by_crime1 %>%
+        mutate(b = ifelse(str_detect(basis, input$d), T, F)) %>%
+        filter(b == T)
+      
+    })
     
-    by_crime2 %>%
-      filter(str_detect(basis, input$d)) %>%
-      ggplot(aes_string("race")) + geom_bar(aes_string(fill = "race")) + scale_y_continuous(name = "Count") +
-      theme_minimal() + theme(axis.text.x = element_text(angle=60, hjust=1)) +
-      xlab("") + ylab("")
+    t5 <- by_crime1 %>%
+      count(race)
+    
+    t6 <- reactive({  
+      
+      t4() %>%
+      count(race)
+      
+    })
+    
+    t7 <- reactive({ 
+      
+      left_join(t5, t6(), by = "race") %>%
+        gather("count.type", "value", n.x, n.y)
+      
+    }) 
+    
+      t7() %>%
+      ggplot(aes(race, value, fill = as.factor(count.type))) + geom_bar(stat="identity", position="dodge") +
+      ggtitle("Factual Basis for Exonerations, by Race:") + 
+      labs(subtitle = "Comparative view of total exonerations and those based, at least in part, on specific mistakes/misconduct during trial.") + 
+        xlab("") + ylab("") + theme_minimal() + scale_fill_manual("", values = c("n.x" = "gold", "n.y" = "turquoise")) +
+        coord_flip()
     
   })
   
