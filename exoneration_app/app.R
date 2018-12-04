@@ -25,6 +25,9 @@ by_crime2 <- by_crime1 %>%
   
 by_crime2$crime_type2 <- as.factor(by_crime2$crime_type2)
 
+x <- c("DNA", "FC", "MWID", "F/MFE", "P/FA", "OM", "ILD")
+new <- as.data.frame(x)
+new$x <- as.factor(new$x)
 
 #APP CODE:
 
@@ -43,6 +46,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
                   
                   br(),
                   
+                  sidebarLayout(
                   sidebarPanel(
                     selectInput(inputId = "a",
                                 label = "Select Variable to Examine Exoneration Through the Years:",
@@ -55,7 +59,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
                 
                
                 
-                mainPanel(plotOutput("PlotA"))
+                mainPanel(plotOutput("PlotA")))
       
       ),
        
@@ -63,16 +67,53 @@ ui <- fluidPage(theme = shinytheme("paper"),
           
           br(),
           
+          sidebarLayout(
           sidebarPanel(
             selectInput(inputId = "b",
-                        label = "Select Type of Crime:",
+                        label = "A By-State Look at the Data: Select Type of Crime:",
                         choices = levels(by_crime2$crime_type2)
                     
             )),
           
 
           mainPanel(plotOutput("PlotB"))
+        ),
+        
+        br(),
+        br(),
+        
+        sidebarLayout(
+          sidebarPanel(
+            selectInput(inputId = "c",
+                        label = "A By-Race Look at the Data: Select Type of Crime:",
+                        choices = levels(by_crime2$crime_type2)
+                        
+            )),
           
+          
+          mainPanel(plotOutput("PlotC"))
+        )
+        
+        ),
+      
+ 
+        tabPanel("Exoneration Basis",
+                 
+                 br(),
+                 
+                 sidebarLayout(
+                   sidebarPanel(
+                     selectInput(inputId = "d",
+                                 label = "Select Basis of Exoneration:",
+                                 choices = levels(new$x)
+                                 
+                                 
+                     )),
+                   
+                   
+                   
+                   mainPanel(plotOutput("PlotD")))
+                 
         )
       
       )
@@ -109,6 +150,31 @@ server <- function(input, output) {
       theme(legend.position = "bottom") + theme_minimal() +  xlab("") + ylab("") + labs(fill = "") +
       coord_flip() + theme(legend.position="bottom", legend.key.size = unit(0.17, "cm")) +
       guides(fill = guide_legend(nrow = 6, byrow = TRUE))
+    
+  })
+  
+  output$PlotC <- renderPlot({
+    
+    by_crime2 %>%
+      filter(crime_type2 == input$c) %>%
+      ggplot(aes_string("worst_crime_display")) + geom_bar(aes_string(fill = "race")) +
+      ggtitle("The Worst Crimes Exonerees Were Convicted For, by Race:") +
+      labs(subtitle = "This graphic shows both convictions and exonerations by crime and race") +
+      theme(legend.position = "bottom") + theme_minimal() +  xlab("") + ylab("") + labs(fill = "") +
+      coord_flip() + theme(legend.position="bottom", legend.key.size = unit(0.17, "cm")) +
+      guides(fill = guide_legend(nrow = 1, byrow = TRUE))
+    
+  })
+  
+  output$PlotD <- renderPlot({
+    
+    options <- reactive({ 
+    
+    by_crime2 %>%
+      filter(str_detect(basis, input$d)) %>%
+      ggplot(aes_string("race")) + geom_bar(aes_string(fill = "race")) + scale_y_continuous(name = "Count") +
+      theme_minimal() + theme(axis.text.x = element_text(angle=60, hjust=1)) +
+      xlab("") + ylab("")
     
   })
   
