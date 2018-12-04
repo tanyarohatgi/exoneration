@@ -1,0 +1,12 @@
+name: exoneration-data
+title: exoneration-data
+username:
+account: tanyarohatgi
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 603758
+bundleId: 1740597
+url: https://tanyarohatgi.shinyapps.io/exoneration-data/
+when: 1543960704.75634
+asMultiple: FALSE
+asStatic: FALSE
