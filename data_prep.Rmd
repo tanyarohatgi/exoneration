@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(janitor)
 library(readxl)
-
+library(lazyeval)
 ```
 
 ```{r}
@@ -69,6 +69,7 @@ by_crime %>%
 
 # SUBSET BY CRIME
 
+
 # SUBSET BY RACE WHERE X-AXIS IS TYPE OF CRIME
 
 # TOTAL EXONERATIONS BY BASIS OF EXONERATION:
@@ -125,5 +126,7 @@ write_rds(r, "r.rds")
 write_rds(r, "exoneration_app/r.rds")
 write_rds(by_crime, "by_crime.rds")
 write_rds(by_crime, "exoneration_app/by_crime.rds")
+
+
 ```
 

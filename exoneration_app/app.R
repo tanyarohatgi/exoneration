@@ -11,6 +11,7 @@ library(tidyverse)
 library(shiny)
 library(ggplot2)
 library(shinythemes)
+library(stringr)
 
 r1 <- read_rds("r.rds")
 exon1 <- read_rds("exon.rds")
@@ -28,6 +29,27 @@ by_crime2$crime_type2 <- as.factor(by_crime2$crime_type2)
 x <- c("DNA", "FC", "MWID", "F/MFE", "P/FA", "OM", "ILD")
 new <- as.data.frame(x)
 new$x <- as.factor(new$x)
+
+new1 <- new %>%
+  mutate(x = case_when(x == "DNA" ~ "DNA Evidence",
+                       x == "FC" ~ "False Confession",
+                       x == "MWID" ~ "Mistaken Witness ID",
+                       x == "F/MFE" ~ "False or Misleading Forensic Evidence",
+                       x == "P/FA" ~ "Perjury or False Accusation",
+                       x == "OM" ~ "Official Misconduct",
+                       x == "ILD" ~ "Insufficient Legal Defense"))
+
+by_crime_new <- by_crime1 %>%
+  mutate(basis = str_replace_all(basis, c("DNA" = "DNA Evidence",
+                           "FC" = "False Confession",
+                           "MWID" = "Mistaken Witness ID",
+                           "F/MFE" = "False or Misleading Forensic Evidence",
+                           "P/FA" = "Perjury or False Accusation",
+                           "OM" = "Official Misconduct",
+                           "ILD" = "Insufficient Legal Defense")))
+
+new1$x <- as.factor(new1$x)
+by_crime_new$basis <- as.factor(by_crime_new$basis)
 
 #APP CODE:
 
@@ -104,7 +126,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
                    sidebarPanel(
                      selectInput(inputId = "d",
                                  label = "Select Basis of Exoneration:",
-                                 choices = levels(new$x)
+                                 choices = levels(new1$x)
                                  
                                  
                      )),
@@ -113,7 +135,26 @@ ui <- fluidPage(theme = shinytheme("paper"),
                    
                    mainPanel(plotOutput("PlotD")))
                  
-        )
+        ),
+      
+      tabPanel("Conviction Integrity Units",
+               
+               br(),
+               
+               sidebarLayout(
+                 sidebarPanel(
+                   selectInput(inputId = "e",
+                               label = "Select Basis of Exoneration:",
+                               choices = levels(new1$x)
+                               
+                               
+                   )),
+                 
+                 
+                 
+                 mainPanel(plotOutput("PlotE")))
+               
+      )
       
       )
       
@@ -169,7 +210,7 @@ server <- function(input, output) {
     
     t4 <- reactive({
       
-      by_crime1 %>%
+      by_crime_new %>%
         mutate(b = ifelse(str_detect(basis, input$d), T, F)) %>%
         filter(b == T)
       
@@ -188,7 +229,8 @@ server <- function(input, output) {
     t7 <- reactive({ 
       
       left_join(t5, t6(), by = "race") %>%
-        gather("count.type", "value", n.x, n.y)
+        transmute(race = race, Total = n.x, Based = n.y) %>%
+        gather("count.type", "value", Total, Based)
       
     }) 
     
@@ -196,8 +238,8 @@ server <- function(input, output) {
       ggplot(aes(race, value, fill = as.factor(count.type))) + geom_bar(stat="identity", position="dodge") +
       ggtitle("Factual Basis for Exonerations, by Race:") + 
       labs(subtitle = "Comparative view of total exonerations and those based, at least in part, on specific mistakes/misconduct during trial.") + 
-        xlab("") + ylab("") + theme_minimal() + scale_fill_manual("", values = c("n.x" = "gold", "n.y" = "turquoise")) +
-        coord_flip()
+      xlab("") + ylab("") + theme_minimal() + scale_fill_manual("", values = c("Total" = "turquoise2", "Based" = "pink")) +
+      coord_flip()
     
   })
   
