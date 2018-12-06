@@ -12,11 +12,10 @@ library(shiny)
 library(ggplot2)
 library(shinythemes)
 library(stringr)
+library(janitor)
 
 #ADDITIONAL DATA CLEANING/MANIPULATING: 
 
-r1 <- read_rds("r.rds")
-exon1 <- read_rds("exon.rds")
 by_crime1 <- read_rds("by_crime.rds")
 
 by_crime1$crime_type <- as.factor(by_crime1$crime_type)
