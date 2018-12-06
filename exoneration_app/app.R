@@ -17,6 +17,8 @@ r1 <- read_rds("r.rds")
 exon1 <- read_rds("exon.rds")
 by_crime1 <- read_rds("by_crime.rds")
 
+by_crime1$crime_type <- as.factor(by_crime1$crime_type)
+
 by_crime2 <- by_crime1 %>%
   mutate(crime_type2 = case_when(crime_type %in% c("Drug Possession or Sale", "Weapon Possession or Sale", "Immigration", "Military Justice Offense", "Other") ~ "Other",
                                  crime_type %in% "Violent Crimes (Non-Sexual)" ~ "Violent Crimes (Non-Sexual)",
@@ -51,6 +53,17 @@ by_crime_new <- by_crime1 %>%
 new1$x <- as.factor(new1$x)
 by_crime_new$basis <- as.factor(by_crime_new$basis)
 
+by_crime3 <- by_crime2 %>%
+  mutate(exonerated = case_when(
+    exonerated >= 2012 & exonerated <= 2018 ~ "2011 - Present",
+    exonerated >= 2008 & exonerated <= 2012 ~ "2008 - 2012",
+    exonerated >= 2003 & exonerated <= 2007 ~ "2003 - 2007"
+  ))
+
+by_crime3$exonerated <- as.factor(by_crime3$exonerated)
+by_crime3$county <- as.factor(by_crime3$county)
+by_crime3$race <- as.factor(by_crime3$race)
+
 #APP CODE:
 
 ui <- fluidPage(theme = shinytheme("paper"),
@@ -84,7 +97,7 @@ ui <- fluidPage(theme = shinytheme("paper"),
       
       ),
        
-          tabPanel("Type of Crime (Detail)",
+          tabPanel("Type of Crime, State, and Race",
           
           br(),
           
@@ -117,25 +130,6 @@ ui <- fluidPage(theme = shinytheme("paper"),
         
         ),
       
- 
-        tabPanel("Exoneration Basis",
-                 
-                 br(),
-                 
-                 sidebarLayout(
-                   sidebarPanel(
-                     selectInput(inputId = "d",
-                                 label = "Select Basis of Exoneration:",
-                                 choices = levels(new1$x)
-                                 
-                                 
-                     )),
-                   
-                   
-                   
-                   mainPanel(plotOutput("PlotD")))
-                 
-        ),
       
       tabPanel("Conviction Integrity Units",
                
@@ -143,7 +137,28 @@ ui <- fluidPage(theme = shinytheme("paper"),
                
                sidebarLayout(
                  sidebarPanel(
-                   selectInput(inputId = "e",
+                   checkboxInput("extra", label = "Show CIU-Facilitated Exonerations by Crime Type."),
+                   
+                   conditionalPanel(
+                     condition = "input$extra == TRUE",
+                     uiOutput("conditionalInput")
+                     
+                   )
+                   
+                   ),
+                 
+                 
+                 mainPanel(plotOutput("PlotE")))
+               
+      ),
+      
+      tabPanel("Exoneration Basis",
+               
+               br(),
+               
+               sidebarLayout(
+                 sidebarPanel(
+                   selectInput(inputId = "d",
                                label = "Select Basis of Exoneration:",
                                choices = levels(new1$x)
                                
@@ -152,7 +167,8 @@ ui <- fluidPage(theme = shinytheme("paper"),
                  
                  
                  
-                 mainPanel(plotOutput("PlotE")))
+                 mainPanel(plotOutput("PlotD")))
+               
                
       )
       
@@ -167,6 +183,23 @@ ui <- fluidPage(theme = shinytheme("paper"),
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+  
+  output$conditionalInput <- renderUI({
+    
+    if(input$extra == TRUE) {
+      
+      sidebarLayout(
+      selectInput(inputId = "f",
+                  label = "Select Time Period:",
+                  choices = levels(by_crime3$exonerated)),
+      
+      checkboxInput("county", label = "Show same plot, but with county instead of crime type.")
+                  
+      )
+      
+    }
+    
+  })
   
   output$PlotA <- renderPlot({ 
   
@@ -243,6 +276,65 @@ server <- function(input, output) {
     
   })
   
+  
+  output$PlotE <- renderPlot({
+    
+    if(input$extra == TRUE) {
+      
+ by_crime3 %>%
+        filter(exonerated == input$f) %>%
+        mutate(tags = str_extract(tags, "CIU")) %>%
+        filter(tags == "CIU") %>%
+        ggplot(aes_string("state")) + geom_bar(aes_string(fill = "county")) + theme_minimal() +
+        ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
+        labs(subtitle = "Data can be viewed in 5 year increments, beginning in 2003 when CIU exonerations are first seen.") +
+        xlab("") + ylab("") + labs("") + coord_flip()
+      
+      if (input$county == TRUE) {
+        
+        by_crime3 %>%
+          filter(exonerated == input$f) %>%
+          mutate(tags = str_extract(tags, "CIU")) %>%
+          filter(tags == "CIU") %>%
+          ggplot(aes_string("state")) + geom_bar(aes_string(fill = "county")) + theme_minimal() +
+          ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
+          labs(subtitle = "Data can be viewed in 5 year increments, beginning in 2003 when CIU exonerations are first seen.") +
+          xlab("") + ylab("") + labs("") + coord_flip()
+        
+      }
+      
+      else {
+        
+        by_crime3 %>%
+          filter(exonerated == input$f) %>%
+          mutate(tags = str_extract(tags, "CIU")) %>%
+          filter(tags == "CIU") %>%
+          ggplot(aes_string("state")) + geom_bar(aes_string(fill = "crime_type")) + theme_minimal() +
+          ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
+          labs(subtitle = "Data can be viewed in 5 year increments, beginning in 2003 when CIU exonerations are first seen.") +
+          xlab("") + ylab("") + labs("") + coord_flip()
+        
+      }
+      
+
+    }
+    
+    else {
+    
+    by_crime1 %>%
+      mutate(tags = str_extract(tags, "CIU")) %>%
+      filter(tags == "CIU") %>% 
+      group_by(exonerated, state) %>%
+      count(tags) %>%
+      ggplot(aes(exonerated)) + geom_line(aes(y = n, color = state))
+    
+    }
+    
+    
+    
+  })
+  
+
 }
 
 # Run the application 
