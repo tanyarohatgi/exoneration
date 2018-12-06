@@ -66,18 +66,23 @@ by_crime3$race <- as.factor(by_crime3$race)
 
 #APP CODE:
 
-ui <- fluidPage(theme = shinytheme("paper"),
+ui <- fluidPage(theme = shinytheme("cosmo"),
    
+                tags$head(
+                  tags$style(
+                    ".title {margin: auto; width: 500px; text-align:center; font-size : 20px;}"
+                  )
+                ),
   
-   titlePanel("U.S. Exoneration Data: 1989-2018"),
+                tags$div(class="title", titlePanel(strong("U.S. Exoneration Data: 1989-2018"))),
+                h4("TANYA ROHATGI", align = "center"),
    
    tabsetPanel(
-               tabPanel("Plots"),
-               
+     
+     tabPanel("Plots and Findings",
                br(),
-               
-                tabsetPanel(
-                  tabPanel("Summary Plots",
+                tabsetPanel(type = "pills",
+                  tabPanel("Introductory Plots",
                   
                   br(),
                   
@@ -87,15 +92,11 @@ ui <- fluidPage(theme = shinytheme("paper"),
                                 label = "Select Variable to Examine Exoneration Through the Years:",
                                 choices = c("Type of Crime" = "by_crime1$crime_type", "Race of Exoneree" = "by_crime1$race",
                                             "Sex of Exoneree (Time of Conviction)" = "by_crime1$sex")
-                  
-                  
-                )),
-                
-               
+                               )),
                 
                 mainPanel(plotOutput("PlotA")))
       
-      ),
+                          ),
        
           tabPanel("Type of Crime, State, and Race",
           
@@ -161,23 +162,19 @@ ui <- fluidPage(theme = shinytheme("paper"),
                    selectInput(inputId = "d",
                                label = "Select Basis of Exoneration:",
                                choices = levels(new1$x)
-                               
-                               
+           
                    )),
-                 
-                 
-                 
-                 mainPanel(plotOutput("PlotD")))
-               
-               
-      )
-      
-      )
-      
 
-   )
+                 mainPanel(plotOutput("PlotD")))
+      
+       )
+      
+      )
+   ),
    
-)
+   tabPanel("About This Project")
+   
+))
 
 
 
@@ -193,7 +190,7 @@ server <- function(input, output) {
                   label = "Select Time Period:",
                   choices = levels(by_crime3$exonerated)),
       
-      checkboxInput("county", label = "Show same plot, but with county instead of crime type.")
+      checkboxInput("county", label = "Show same plot, but with county fill instead of crime type.")
                   
       )
       
@@ -271,7 +268,7 @@ server <- function(input, output) {
       ggplot(aes(race, value, fill = as.factor(count.type))) + geom_bar(stat="identity", position="dodge") +
       ggtitle("Factual Basis for Exonerations, by Race:") + 
       labs(subtitle = "Comparative view of total exonerations and those based, at least in part, on specific mistakes/misconduct during trial.") + 
-      xlab("") + ylab("") + theme_minimal() + scale_fill_manual("", values = c("Total" = "turquoise2", "Based" = "pink")) +
+      xlab("") + ylab("") + theme_minimal() + scale_fill_manual("", values = c("Total" = "royalblue1", "Based" = "orchid1")) +
       coord_flip()
     
   })
@@ -285,10 +282,10 @@ server <- function(input, output) {
         filter(exonerated == input$f) %>%
         mutate(tags = str_extract(tags, "CIU")) %>%
         filter(tags == "CIU") %>%
-        ggplot(aes_string("state")) + geom_bar(aes_string(fill = "county")) + theme_minimal() +
+        ggplot(aes_string("state")) + geom_bar(aes_string(fill = "crime_type")) + theme_minimal() +
         ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
         labs(subtitle = "Data can be viewed in 5 year increments, beginning in 2003 when CIU exonerations are first seen.") +
-        xlab("") + ylab("") + labs("") + coord_flip()
+        xlab("") + ylab("") + labs(fill = "Crime Type") + coord_flip() + theme(legend.position = "bottom")
       
       if (input$county == TRUE) {
         
@@ -299,7 +296,7 @@ server <- function(input, output) {
           ggplot(aes_string("state")) + geom_bar(aes_string(fill = "county")) + theme_minimal() +
           ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
           labs(subtitle = "Data can be viewed in 5 year increments, beginning in 2003 when CIU exonerations are first seen.") +
-          xlab("") + ylab("") + labs("") + coord_flip()
+          xlab("") + ylab("") + labs(fill = "County") + coord_flip()  + theme(legend.position = "bottom", legend.key.size = unit(0.32, "cm"))
         
       }
       
@@ -312,7 +309,7 @@ server <- function(input, output) {
           ggplot(aes_string("state")) + geom_bar(aes_string(fill = "crime_type")) + theme_minimal() +
           ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
           labs(subtitle = "Data can be viewed in 5 year increments, beginning in 2003 when CIU exonerations are first seen.") +
-          xlab("") + ylab("") + labs("") + coord_flip()
+          xlab("") + ylab("") + labs(fill = "Crime Type") + coord_flip() + theme(legend.position = "bottom")
         
       }
       
@@ -326,7 +323,9 @@ server <- function(input, output) {
       filter(tags == "CIU") %>% 
       group_by(exonerated, state) %>%
       count(tags) %>%
-      ggplot(aes(exonerated)) + geom_line(aes(y = n, color = state))
+      ggplot(aes_string("exonerated")) + geom_line(aes_string(y = "n", color = "state", fill = "state"), size = 1.5, alpha = 0.8) + theme_minimal() +
+        ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices Over Time:") +
+        xlab("") + ylab("") + labs(color = "State")
     
     }
     
