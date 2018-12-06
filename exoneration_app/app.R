@@ -57,7 +57,7 @@ by_crime_new$basis <- as.factor(by_crime_new$basis)
 
 by_crime3 <- by_crime2 %>%
   mutate(exonerated = case_when(
-    exonerated >= 2012 & exonerated <= 2018 ~ "2011 - Present",
+    exonerated >= 2013 & exonerated <= 2018 ~ "2013 - Present",
     exonerated >= 2008 & exonerated <= 2012 ~ "2008 - 2012",
     exonerated >= 2003 & exonerated <= 2007 ~ "2003 - 2007"
   ))
@@ -164,7 +164,8 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                
                sidebarLayout(
                  sidebarPanel(
-                   checkboxInput("extra", label = "Show CIU-Facilitated Exonerations by Crime Type."),
+                   helpText("A Conviction Integrity Unit (CIU) is a division of a prosecutorial office that works to prevent, identify, and remedy false convictions."),
+                   checkboxInput("extra", label = "Show CIU-Facilitated Exonerations by Year and Crime Type."),
                    
                    conditionalPanel(
                      condition = "input$extra == TRUE",
@@ -175,9 +176,17 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                    ),
                  
                  
-                 mainPanel(plotOutput("PlotE")))
+                 mainPanel(plotOutput("PlotE"),
+                           p("CIUs play no definitive role in exonerations before 2003. Given this we can conclude that they only began to come into existence around this time. Their involvement has grown rapidly through the years following - from only 2 exonerations secured between 2003 and 2007, to 21 between 2008 and 2012, to 266 between 2013 and now. This indicates a growing (but by no means suffient, becuase only 12 states have CIUs that have resulted in even a single exoneration) degree of comprehension in prosecutorial offices that wrongful convictions are a serious and frequent problem, and must be remedied.",
+                             style = "font-size : 10pt"),
+                           p("We see that the maximum number of exonerations come from Harris County, Texas, and they are overwhelmingly for cases of drug posession or sale. The only two other states with CIUs that have resulted in significant numbers of exonerations secured are New York and Illinois, the majority of their successes being for exonerees convicted of violent crimes.",
+                             style = "font-size : 10pt"),
+                           p("A CIU that dedicates resources to non-violent/less severe crimes can be explanation enough for looking at drug crimes in the first place. However, what is it that pushed Harris county to do so? Until 2014, defendents were asked for their pleas based on faulty field-test kits that would yeild false positives, before lab results on the substances were returned, and before trial. And 99.5% of drug convictions in the county resulted from plea deals. [ADD LINK].
+                             Harris county, then, is one of the only prosecutorial offices in the entire nation that has identified at least one systemic issue in its criminal justice system and is working actively to remedy it.",
+                             style = "font-size : 10pt")
+                 )
                
-      ),
+      )),
       
       tabPanel("Exoneration Basis",
                
@@ -191,12 +200,17 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
            
                    )),
 
-                 mainPanel(plotOutput("PlotD")))
+                 mainPanel(plotOutput("PlotD"),
+                           p("Some key take-aways from this plot: official misconduct, wherein police, prosecutors, or other officials abused their power or the workings of the judicial process, was a contributing factor in over half of the convictions of both African-American and Caucasian exonerees.
+                             This has also been true for perjury of false accusations. However mistaken witness ID, wherein one or more witness confirmed - mistakenly - that they saw the exoneree commit the crime, sent more black exonerees to jail than those of any other race.",
+                             style = "font-size : 10pt")
+                           
+                           ))
       
        )
       
-      )
-   ),
+    
+   )),
    
    tabPanel("About This Project")
    
@@ -309,6 +323,7 @@ server <- function(input, output) {
  by_crime3 %>%
         mutate(tags = str_extract(tags, "CIU")) %>%
         filter(tags == "CIU") %>%
+        select(-basis) %>%
         filter(exonerated == input$f) %>%
         ggplot(aes_string("state")) + geom_bar(aes_string(fill = "crime_type")) + theme_minimal() +
         ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
@@ -320,6 +335,7 @@ server <- function(input, output) {
         by_crime3 %>%
           mutate(tags = str_extract(tags, "CIU")) %>%
           filter(tags == "CIU") %>%
+          select(-basis) %>%
           filter(exonerated == input$f) %>%
           ggplot(aes_string("state")) + geom_bar(aes_string(fill = "county")) + theme_minimal() +
           ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
@@ -333,6 +349,7 @@ server <- function(input, output) {
         by_crime3 %>%
           mutate(tags = str_extract(tags, "CIU")) %>%
           filter(tags == "CIU") %>%
+         select(-basis) %>%
           filter(exonerated == input$f) %>%
           ggplot(aes_string("state")) + geom_bar(aes_string(fill = "crime_type")) + theme_minimal() +
           ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
