@@ -5,8 +5,8 @@ account: tanyarohatgi
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 603758
-bundleId: 1745574
+bundleId: 1761233
 url: https://tanyarohatgi.shinyapps.io/exoneration-data/
-when: 1544102568.65731
+when: 1544718090.46596
 asMultiple: FALSE
 asStatic: FALSE
