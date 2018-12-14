@@ -10,6 +10,8 @@ library(tidyverse)
 library(janitor)
 library(readxl)
 library(lazyeval)
+library(styler)
+#I used the Styler addin to format my code in accordance with the tidyverse styleguide. 
 ```
 
 ```{r}
@@ -26,107 +28,35 @@ exon$convicted <- as.numeric(exon$convicted)
 e <- exon %>%
   select(-c(list_addl_crimes_recode, posting_date)) %>%
   mutate(served = exonerated - convicted) %>%
-  mutate(dna = str_to_lower(dna), x = str_to_lower(x), fc = str_to_lower(fc), mwid = str_to_lower(mwid), 
-         f_mfe = str_to_lower(f_mfe), p_fa = str_to_lower(p_fa), om = str_to_lower(om), 
-         ild = str_to_lower(ild)) %>%
+  mutate(
+    dna = str_to_lower(dna), x = str_to_lower(x), fc = str_to_lower(fc), mwid = str_to_lower(mwid),
+    f_mfe = str_to_lower(f_mfe), p_fa = str_to_lower(p_fa), om = str_to_lower(om),
+    ild = str_to_lower(ild)
+  ) %>%
   unite("basis", dna:ild, sep = "; ", remove = TRUE) %>%
   mutate(basis = str_replace_all(basis, "NA;", "")) %>%
   mutate(basis = str_replace_all(basis, "NA", "")) %>%
   mutate(basis = str_to_upper(basis)) %>%
   mutate(tags = str_replace_all(tags, "#", " "))
 
-# We must take the 'served' variable as approximations because we do not know exactly when after conviction individuals were sentenced and incarcerated. Usually, however, the maximum time elapsed between the two is 90 days for federal crimes (lower for other crimes). Therefore, by creating this variable using conviction date, we can illustrate a general sense of time served before exoneration. 
-
+# We must take the 'served' variable as approximations because we do not know exactly when after conviction individuals were sentenced and incarcerated. Usually, however, the maximum time elapsed between the two is 90 days for federal crimes (lower for other crimes). Therefore, by creating this variable using conviction date, we can illustrate a general sense of time served before exoneration.
 ```
 
 ```{r}
 # TOTAL EXONERATIONS BY CRIME:
 
 by_crime <- e %>%
-  mutate(crime_type = case_when(worst_crime_display %in% c("Accessory to Murder", "Arson", "Assault", "Attempt, Violent", "Attempted Murder", "Child Abuse", "Dependent Adult Abuse", "Kidnapping", "Manslaughter", "Murder", "Other Violent Felony", "Robbery", "Stalking") ~ "Violent Crimes (Non-Sexual)",
-                                worst_crime_display %in% c("Child Sex Abuse", "Sex Offender Registration", "Sexual Assault") ~ "Violent Crimes (Sexual)",
-                                worst_crime_display %in% c("Bribery", "Burglary/Unlawful Entry", "Conspiracy", "Failure to Pay Child Support", "Filing a False Report", "Forgery", "Fraud", "Obstruction of Justice", "Other Nonviolent Felony", "Perjury", "Possession of Stolen Property", "Solicitation", "Tax Evasion/Fraud", "Theft", "Traffic Offense", "Threats") ~ "Non-Violent Crimes",
-                                worst_crime_display %in% c("Destruction of Property", "Harassment", "Menacing", "Official Misconduct", "Supporting Terrorism") ~ "Vary-by-Case Crimes")) %>%
-  mutate(crime_type = coalesce(crime_type, worst_crime_display)) 
+  mutate(crime_type = case_when(
+    worst_crime_display %in% c("Accessory to Murder", "Arson", "Assault", "Attempt, Violent", "Attempted Murder", "Child Abuse", "Dependent Adult Abuse", "Kidnapping", "Manslaughter", "Murder", "Other Violent Felony", "Robbery", "Stalking") ~ "Violent Crimes (Non-Sexual)",
+    worst_crime_display %in% c("Child Sex Abuse", "Sex Offender Registration", "Sexual Assault") ~ "Violent Crimes (Sexual)",
+    worst_crime_display %in% c("Bribery", "Burglary/Unlawful Entry", "Conspiracy", "Failure to Pay Child Support", "Filing a False Report", "Forgery", "Fraud", "Obstruction of Justice", "Other Nonviolent Felony", "Perjury", "Possession of Stolen Property", "Solicitation", "Tax Evasion/Fraud", "Theft", "Traffic Offense", "Threats") ~ "Non-Violent Crimes",
+    worst_crime_display %in% c("Destruction of Property", "Harassment", "Menacing", "Official Misconduct", "Supporting Terrorism") ~ "Vary-by-Case Crimes"
+  )) %>%
+  mutate(crime_type = coalesce(crime_type, worst_crime_display))
 
-# Here, I have attempted to categorise crime by physical harm/violence (with some, such as harrassment or support for terrorism that could fall into either category depending on the case). There are a few categories, such as immigration or drug crimes, that I have left uncategorised, because they are qualitatively distinct from other types and so merit individual analysis. 
+# Here, I have attempted to categorise crime by physical harm/violence (with some, such as harrassment or support for terrorism that could fall into either category depending on the case). There are a few categories, such as immigration or drug crimes, that I have left uncategorised, because they are qualitatively distinct from other types and so merit individual analysis.
 
-by_crime %>%
-  ggplot(aes(exonerated)) + geom_bar(aes(fill = crime_type)) + theme_minimal() + 
-  theme(axis.text.x = element_text(angle=60)) +
-  xlab("Year of Exoneration") + ylab("") + labs(fill = "Type of Crime") +
-  ggtitle("Exonerations by Worst Crime Conviction, 1989 - 2018:") 
-
-by_crime %>%
-  ggplot(aes(crime_type)) + geom_bar(aes(fill = crime_type)) + theme_minimal() + 
-  theme(axis.text.x = element_text(angle=60, hjust=1), legend.position = "none") +
-  xlab("") + ylab("") + labs(fill = "Type of Crime")
-
-by_crime %>%
-  count(exonerated, crime_type) %>%
-  ggplot(aes(exonerated, n, color = crime_type)) + geom_line() + #IS THIS RIGHT??
-  xlab("Year of Exoneration") + ylab("N. of Exonerations by Year & Crime Type") + labs(color = "Type of Crime")
-
-# SUBSET BY CRIME
-
-
-# SUBSET BY RACE WHERE X-AXIS IS TYPE OF CRIME
-
-# TOTAL EXONERATIONS BY BASIS OF EXONERATION:
-# Use exon
-
-exon %>%
-  filter(!is.na(input$basis)) %>%
-  ggplot(aes())
-
-#ILD:
-
-e1 <- e %>%
-  mutate(ild1 = ifelse(str_detect(basis, "ILD"), T, F)) %>%
-  filter(ild1 == T)
-
-r1 <- e %>%
-  count(race)
-
-r2 <- e1 %>%
-  count(race)
-
-r <- left_join(r1, r2, by = "race") %>%
-  mutate(p = (n.y/n.x)*100) %>%
-  mutate_if(is.numeric, round, 1) %>%
-  gather("count.type", "value", n.x, n.y)
-
-r %>%
-  ggplot(aes(race, value, fill = as.factor(count.type))) + geom_bar(stat="identity", position="dodge") +
-  ggtitle("Exonerations Involving Initial Insuffient Legal Defense (ILD), by Race:") + 
-  labs(subtitle = "Comparative view of total exonerations and those based, at least in part, on ILD during trial.") + xlab("") + ylab("") + theme_minimal()
-
-# CIU PLOTS:
-
-e %>%
-  filter(str_detect(tags, "CIU")) %>%
-  ggplot(aes(state)) + geom_bar(aes(fill = race)) + scale_y_continuous(name = "Count") +
-  theme_minimal() + theme(axis.text.x = element_text(angle=60, hjust=1)) +
-  xlab("") + ylab("")
-
-e %>%
-  filter(str_detect(tags, "CIU")) %>%
-  ggplot(aes(race)) + geom_bar(aes(fill = race)) + facet_wrap(~state, scales = "free_y") +
-   theme_minimal() + theme(axis.text.x = element_text(angle=60, hjust=1)) +
-  xlab("") + ylab("") 
- 
-
-# Next, SHOW CIU EXONERATIONS AS PERCENTAGE OF TOTAL EXONERATIONS IN THAT STATE.
-
-write_rds(exon, "exon.rds")
-write_rds(exon, "exoneration_app/exon.rds")
-write_rds(e, "e.rds")
-write_rds(e, "exoneration_app/e.rds")
-write_rds(r, "r.rds")
-write_rds(r, "exoneration_app/r.rds")
 write_rds(by_crime, "by_crime.rds")
 write_rds(by_crime, "exoneration_app/by_crime.rds")
-
-
 ```
 
