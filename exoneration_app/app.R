@@ -13,6 +13,8 @@ library(ggplot2)
 library(shinythemes)
 library(stringr)
 library(janitor)
+library(plotly)
+library(shinyWidgets)
 
 #ADDITIONAL DATA CLEANING/MANIPULATING: 
 
@@ -72,14 +74,33 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
    
                 tags$head(
                   tags$style(
-                    ".title {margin: auto; width: 500px; text-align:center; font-size : 20px;}"
+                    ".title {margin: auto; width: 500px; text-align:center; font-size : 60px}"
                   )
                 ),
   
-                tags$div(class="title", titlePanel(strong("U.S. Exoneration Data: 1989-2018"))),
+                tags$div(class="title", titlePanel(strong("EXPLORING EXONERATION DATA"))),
                 h4("TANYA ROHATGI", align = "center"),
+                
+                tags$head(
+                  tags$style(HTML(".background{ width: 100%; background-size: 100% 116%; text-align:center; position: absolute; left: 0;
+                                  background-image: url(https://cdn-images-1.medium.com/max/2000/1*N36dU-o02IRwRoqQVZqqdg.jpeg);
+                                  }"))),
    
    tabsetPanel(
+     
+     tabPanel("About This Project",
+              column(10,
+                     class = "background",
+                     br(),
+                     h4(strong("What does this app do?")),
+                     h4("This app uses data from", tags$a(href = "http://www.law.umich.edu/special/exoneration/Pages/about.aspx", "The National Registry of Exonerations"), "a project by the University of Michigan Law School, to analyse 2,280 exonerations between the years 1989 and 2018 in the United States. I look at type of crime, exoneree demographic characteristics, prosecutorial offices involved, and factors related to exoneration, to graphically demonstrate my findings of the following:"),
+                     h4("1) Over the last 4-5 years, there has been a massive increase in exonerations for those falsely convicted of drug-related offences, which has corresponded with a large spike in total exonerations. 2) These exonerations have largely been facilitated by the Conviction Integrity Unit in the prosecution office of Texas' Harris County, and I explore why. 3) Official misconduct and false accusations played a greater role in the convictions of exonerees than factors such as erroneous DNA evidence or inadequate legal defense, although both the latter were present. Mistaken witness ID played a far greater role in sending black exonerees to prison than it did for any other race."),
+                     br(),
+                     h4(strong("Take a look under the hood:")),
+                     h4("Access the code for this app", tags$a(href = "https://github.com/tanyarohatgi/exoneration", "here."), "Browse my other work this past semester for Harvard College's 'GOV 1005: Data'", tags$a(href = "https://github.com/tanyarohatgi", "here.")),
+                     br(),br(),br(),br(),br(),br(),br(),br(),
+                     br(),br(),br(),br(),br(),br(),br(), br(),br(),br()
+              )),
      
      tabPanel("Plots and Findings",
                br(),
@@ -99,7 +120,9 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                     helpText("1. The type-of-crime chart details only the worst crime the exoneree was convicted for, and does not include any other crimes/misdemeanors they may have committed."),
                     helpText("2. The gender of the exoneree refers to their gender at the time of conviction.")),
                 
-                mainPanel(plotOutput("PlotA"),
+                mainPanel(h4(strong("Exonerations in the United States between 1989 and 2018:")),
+                          h5("Breakdowns by type of crime and demograhic characteristics."),
+                          plotOutput("PlotA"),
                           p(""),
                           p("Type of Crime: While we see the consistent presence of violent offense convictions through the years, there has been a recent spike in the percentage of exonerations for non-violent and drug-related offence convictions.
                             This is somewhat surprising; it would be reasonable to expect that scare re-consideration resources would be spent on high-profile cases - such as of those on death row - where the crimes committed were most likely violent.",
@@ -123,12 +146,16 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
           sidebarPanel(
             selectInput(inputId = "b",
                         label = "A By-State Look at the Data: Select Type of Crime:",
-                        choices = levels(by_crime2$crime_type2)
-                    
-            )),
+                        choices = levels(by_crime2$crime_type2)),
+            helpText("Since there are too many states for a legend to be helpful or visually significant, hover over the barplot to identify state and exoneration count instead."),
+            helpText("NOTE: For federal cases, the state name is in the form of 'Fed-XX' where 'XX' is the postal abbreviation for the state in which the crime was committed. I have not collapsed federal and non-federal crimes per state because they were in all likelihood prosecuted by different offices and tried in different tiers of courts.")
+            
+            ),
           
 
-          mainPanel(plotOutput("PlotB"),
+          mainPanel(h4(strong("The Worst Crimes Exonerees Were Convicted For, by State:")),
+                    h5("This graphic shows both convictions and exonerations by crime and state."),
+                    plotlyOutput("PlotB"),
                     p("Here the most significant thing we see is that Texas has exonerated the greatest number of exonerees charged with drug crimes, which after murder and sexual assault is the third-most represented kind of conviction.",
                       style = "font-size : 10pt"),
                     p("It is also a crime for which, to our knowledge, a greater number of African-Americans have been falsely accused - as we see in the chart below. This leads us to the question: is this a disproportionate number? To put it another way, is it reflective of racial disparities in drug-crime related incarceration? The answer seems to be in the affirmative. [ADD LINK]",
@@ -145,12 +172,15 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
           sidebarPanel(
             selectInput(inputId = "c",
                         label = "A By-Race Look at the Data: Select Type of Crime:",
-                        choices = levels(by_crime2$crime_type2)
-                        
-            )),
+                        choices = levels(by_crime2$crime_type2)),
+            helpText("Hover over the barplot to identify state and exoneration count.")
+            
+            ),
           
           
-          mainPanel(plotOutput("PlotC")
+          mainPanel(h4(strong("The Worst Crimes Exonerees Were Convicted For, by Race:")),
+                    h5("This graphic shows both convictions and exonerations by crime and state."),
+                    plotlyOutput("PlotC")
                     )
         )
         
@@ -172,7 +202,8 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                    ),
                  
                  
-                 mainPanel(plotOutput("PlotE"),
+                 mainPanel(h4(strong("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices Over Time:")),
+                           plotOutput("PlotE"),
                            p("CIUs play no definitive role in exonerations before 2003. Given this we can conclude that they only began to come into existence around this time. Their involvement has grown rapidly through the years following - from only 2 exonerations secured between 2003 and 2007, to 21 between 2008 and 2012, to 266 between 2013 and now. This indicates a growing (but by no means suffient, becuase only 12 states have CIUs that have resulted in even a single exoneration) degree of comprehension in prosecutorial offices that wrongful convictions are a serious and frequent problem, and must be remedied.",
                              style = "font-size : 10pt"),
                            p("We see that the maximum number of exonerations come from Harris County, Texas, and they are overwhelmingly for cases of drug posession or sale. The only two other states with CIUs that have resulted in significant numbers of exonerations secured are New York and Illinois, the majority of their successes being for exonerees convicted of violent crimes.",
@@ -198,7 +229,9 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
           ),
         
         
-        mainPanel(plotOutput("PlotE2")
+        mainPanel(h4(strong("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:")),
+                  h5("Data can be viewed in 5 year increments, beginning in 2003 when CIU exonerations are first seen."),
+                  plotOutput("PlotE2")
         )
       
       )),
@@ -225,9 +258,7 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
        )
       
     
-   )),
-   
-   tabPanel("About This Project")
+   ))
    
 ))
 
@@ -242,36 +273,41 @@ server <- function(input, output) {
   by_crime1 %>%
     ggplot(aes_string("exonerated")) + geom_bar(aes_string(fill = input$a), width = 0.9) + theme_minimal() + 
     theme(legend.position = "bottom") +
-    xlab("") + ylab("") + labs(fill = "") +
-    ggtitle("U.S. Exonerations, 1989 - 2018:") +
-    labs(subtitle = "Break-Downs by Type of Crime and Demograhic Characteristics.")
+    xlab("") + ylab("") + labs(fill = "") 
  
    })
   
+  #The next 2 plots use plotly. I'm not typically a fan of plotly, because I think the formatting is inelegant, but as I explain in the sidebarPanel helpText, there are too many states in PlotB for a legend to be helpful, and so a hover works. I've done the same to PlotC for consistency in the tab.
   
-  output$PlotB <- renderPlot({
+  output$PlotB <- renderPlotly({
     
-    by_crime2 %>%
+    ply <- by_crime2 %>%
+      mutate(crime = worst_crime_display) %>%
       filter(crime_type2 == input$b) %>%
-      ggplot(aes_string("worst_crime_display")) + geom_bar(aes_string(fill = "state")) +
-      ggtitle("The Worst Crimes Exonerees Were Convicted For, by State:") +
-      labs(subtitle = "This graphic shows both convictions and exonerations by crime and state.") +
+      ggplot(aes_string("crime")) + geom_bar(aes_string(fill = "state")) +
       theme(legend.position = "bottom") + theme_minimal() +  xlab("") + ylab("") + labs(fill = "") +
       coord_flip() + theme(legend.position="bottom", legend.key.size = unit(0.17, "cm")) +
       guides(fill = guide_legend(nrow = 6, byrow = TRUE))
     
+    ply %>%
+    ggplotly(tooltip = c("state", "count")) %>%
+    layout(showlegend = F)
+    
   })
   
-  output$PlotC <- renderPlot({
+  output$PlotC <- renderPlotly({
     
-    by_crime2 %>%
+    ply2 <- by_crime2 %>%
+      mutate(crime = worst_crime_display) %>%
       filter(crime_type2 == input$c) %>%
-      ggplot(aes_string("worst_crime_display")) + geom_bar(aes_string(fill = "race")) +
-      ggtitle("The Worst Crimes Exonerees Were Convicted For, by Race:") +
-      labs(subtitle = "This graphic shows both convictions and exonerations by crime and race") +
+      ggplot(aes_string("crime")) + geom_bar(aes_string(fill = "race")) +
       theme(legend.position = "bottom") + theme_minimal() +  xlab("") + ylab("") + labs(fill = "") +
       coord_flip() + theme(legend.position="bottom", legend.key.size = unit(0.17, "cm")) +
       guides(fill = guide_legend(nrow = 1, byrow = TRUE))
+    
+    ply2 %>%
+    ggplotly(tooltip = c("race", "count")) %>%
+    layout(showlegend = F)
     
   })
   
@@ -289,7 +325,6 @@ server <- function(input, output) {
         count(tags) %>%
         ggplot(aes_string("exonerated")) + geom_line(aes_string(y = "n"), size = 1.5, alpha = 0.8, color = "orchid") + 
         theme_minimal() +
-        ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices Over Time:") +
         xlab("") + ylab("")
     }
     
@@ -301,8 +336,7 @@ server <- function(input, output) {
         group_by(exonerated, state) %>%
         count(tags) %>%
         ggplot(aes_string("exonerated")) + geom_line(aes_string(y = "n", color = "state"), size = 1.5, alpha = 0.8) + theme_minimal() +
-        ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices Over Time:") +
-        xlab("") + ylab("") + labs(color = "State")
+        xlab("") + ylab("") + labs(color = "")
       
     }
     
@@ -318,8 +352,6 @@ server <- function(input, output) {
         select(-basis) %>%
         filter(exonerated == input$f) %>%
         ggplot(aes_string("state")) + geom_bar(aes_string(fill = "county")) + theme_minimal() +
-        ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
-        labs(subtitle = "Data can be viewed in 5 year increments, beginning in 2003 when CIU exonerations are first seen.") +
         xlab("") + ylab("") + labs(fill = "County") + coord_flip()  + theme(legend.position = "bottom", legend.key.size = unit(0.32, "cm"))
       
     }
@@ -332,8 +364,6 @@ server <- function(input, output) {
         select(-basis) %>%
         filter(exonerated == input$f) %>%
         ggplot(aes_string("state")) + geom_bar(aes_string(fill = "crime_type")) + theme_minimal() +
-        ggtitle("Number of Exonerations Secured by Conviction Integrity Units in Prosecutorial Offices:") +
-        labs(subtitle = "Data can be viewed in 5 year increments, beginning in 2003 when CIU exonerations are first seen.") +
         xlab("") + ylab("") + labs(fill = "Crime Type") + coord_flip() + theme(legend.position = "bottom")
       
     }
