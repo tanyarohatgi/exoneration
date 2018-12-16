@@ -11,16 +11,25 @@ library(janitor)
 library(readxl)
 library(lazyeval)
 library(styler)
-#I used the Styler addin to format my code in accordance with the tidyverse styleguide. 
+
+#I used the Styler addin to format my code in accordance with the tidyverse
+#styleguide. It's a non-invasive package recommended by Hadley Wickham. See:
+#https://style.tidyverse.org/.
 ```
 
 ```{r}
-# READING IN DATA:
+### READING IN DATA: ###
 
 exon <- read_excel("publicspreadsheet.xlsx") %>%
   clean_names()
 
-# CLEANING DATA:
+# The code manual/explainer for the dataset can be accessed here:
+# http://www.law.umich.edu/special/exoneration/Documents/Coding_Manual_Public.pdf
+```
+
+
+```{r}
+### CLEANING/FORMATTING DATA: ###
 
 exon$exonerated <- as.numeric(exon$exonerated)
 exon$convicted <- as.numeric(exon$convicted)
@@ -29,8 +38,13 @@ e <- exon %>%
   select(-c(list_addl_crimes_recode, posting_date)) %>%
   mutate(served = exonerated - convicted) %>%
   mutate(
-    dna = str_to_lower(dna), x = str_to_lower(x), fc = str_to_lower(fc), mwid = str_to_lower(mwid),
-    f_mfe = str_to_lower(f_mfe), p_fa = str_to_lower(p_fa), om = str_to_lower(om),
+    dna = str_to_lower(dna), 
+    x = str_to_lower(x), 
+    fc = str_to_lower(fc), 
+    mwid = str_to_lower(mwid),
+    f_mfe = str_to_lower(f_mfe), 
+    p_fa = str_to_lower(p_fa), 
+    om = str_to_lower(om),
     ild = str_to_lower(ild)
   ) %>%
   unite("basis", dna:ild, sep = "; ", remove = TRUE) %>%
@@ -39,22 +53,39 @@ e <- exon %>%
   mutate(basis = str_to_upper(basis)) %>%
   mutate(tags = str_replace_all(tags, "#", " "))
 
-# We must take the 'served' variable as approximations because we do not know exactly when after conviction individuals were sentenced and incarcerated. Usually, however, the maximum time elapsed between the two is 90 days for federal crimes (lower for other crimes). Therefore, by creating this variable using conviction date, we can illustrate a general sense of time served before exoneration.
+# We must take the 'served' variable as approximations because we do not know
+# exactly when after conviction individuals were sentenced and incarcerated.
+# Usually, however, the maximum time elapsed between the two is 90 days for
+# federal crimes (lower for other crimes). Therefore, by creating this variable
+# using conviction date, we can illustrate a general sense of time served before
+# exoneration. 
+
+#I don't end up using the served variable in the final version of this project,
+#but I'm keeping it around just in case I continue to work on the app.
 ```
 
 ```{r}
-# TOTAL EXONERATIONS BY CRIME:
+### CREATING DATAFRAME TO USE IN APP: ###
 
 by_crime <- e %>%
   mutate(crime_type = case_when(
-    worst_crime_display %in% c("Accessory to Murder", "Arson", "Assault", "Attempt, Violent", "Attempted Murder", "Child Abuse", "Dependent Adult Abuse", "Kidnapping", "Manslaughter", "Murder", "Other Violent Felony", "Robbery", "Stalking") ~ "Violent Crimes (Non-Sexual)",
+    worst_crime_display %in% c("Accessory to Murder", "Arson", "Assault", "Attempt, Violent", "Attempted Murder", "Child Abuse", "Dependent Adult Abuse", "Kidnapping", "Manslaughter", "Murder", "Other Violent Felony", "Robbery") ~ "Violent Crimes (Non-Sexual)",
     worst_crime_display %in% c("Child Sex Abuse", "Sex Offender Registration", "Sexual Assault") ~ "Violent Crimes (Sexual)",
-    worst_crime_display %in% c("Bribery", "Burglary/Unlawful Entry", "Conspiracy", "Failure to Pay Child Support", "Filing a False Report", "Forgery", "Fraud", "Obstruction of Justice", "Other Nonviolent Felony", "Perjury", "Possession of Stolen Property", "Solicitation", "Tax Evasion/Fraud", "Theft", "Traffic Offense", "Threats") ~ "Non-Violent Crimes",
-    worst_crime_display %in% c("Destruction of Property", "Harassment", "Menacing", "Official Misconduct", "Supporting Terrorism") ~ "Vary-by-Case Crimes"
+    worst_crime_display %in% c("Bribery", "Burglary/Unlawful Entry", "Conspiracy", "Destruction of Property", "Failure to Pay Child Support", "Filing a False Report", "Forgery", "Fraud", "Obstruction of Justice", "Other Nonviolent Felony", "Perjury", "Possession of Stolen Property", "Solicitation", "Tax Evasion/Fraud", "Theft", "Traffic Offense", "Threats") ~ "Non-Violent Crimes",
+    worst_crime_display %in% c( "Harassment", "Menacing", "Official Misconduct", "Stalking", "Supporting Terrorism") ~ "Vary-by-Case Crimes"
   )) %>%
   mutate(crime_type = coalesce(crime_type, worst_crime_display))
 
-# Here, I have attempted to categorise crime by physical harm/violence (with some, such as harrassment or support for terrorism that could fall into either category depending on the case). There are a few categories, such as immigration or drug crimes, that I have left uncategorised, because they are qualitatively distinct from other types and so merit individual analysis.
+# Here, I have attempted to categorise crime by physical harm/violence (with
+# some, such as harrassment or support for terrorism that could fall into either
+# category depending on the case). There are a few categories, such as
+# immigration or drug crimes, that I have left uncategorised, because they are
+# qualitatively distinct from other types and so merit individual analysis.
+# Later in the project I spend much time analysing one of these — drug-related
+# crimes.
+
+
+### CREATING AN.RDS FILE FOR THE APP: ###
 
 write_rds(by_crime, "by_crime.rds")
 write_rds(by_crime, "exoneration_app/by_crime.rds")
