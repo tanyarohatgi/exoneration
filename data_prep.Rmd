@@ -53,6 +53,11 @@ e <- exon %>%
   mutate(basis = str_to_upper(basis)) %>%
   mutate(tags = str_replace_all(tags, "#", " "))
 
+# I remove the NAs in the basis column using stringr. In order to do this, I
+# needed to play around with the case of column entries, in order for the
+# functions to distinguish between the "NA"s that denoted missing values, and
+# the "NA"s in "DNA".
+
 # We must take the 'served' variable as approximations because we do not know
 # exactly when after conviction individuals were sentenced and incarcerated.
 # Usually, however, the maximum time elapsed between the two is 90 days for
@@ -60,8 +65,8 @@ e <- exon %>%
 # using conviction date, we can illustrate a general sense of time served before
 # exoneration. 
 
-#I don't end up using the served variable in the final version of this project,
-#but I'm keeping it around just in case I continue to work on the app.
+# I don't end up using the served variable in the final version of this project,
+# but I'm keeping it around just in case I continue to work on the app.
 ```
 
 ```{r}
@@ -88,6 +93,5 @@ by_crime <- e %>%
 ### CREATING AN.RDS FILE FOR THE APP: ###
 
 write_rds(by_crime, "by_crime.rds")
-write_rds(by_crime, "exoneration_app/by_crime.rds")
 ```
 
