@@ -196,6 +196,12 @@ ui <- fluidPage(
           "Type of Crime, State, and Race",
 
           br(),
+          
+          # When there is more than one unique plot (as in, with its own
+          # distinct sidebarPanel) in a tab, I position the text containing
+          # findings in between them, as opposed to after both plots. This
+          # allows for less scrolling through the page when interacting with the
+          # many plots while reading the text.
 
           sidebarLayout(
             sidebarPanel(
@@ -261,7 +267,8 @@ ui <- fluidPage(
               radioButtons(
                 inputId = "total", label = "Select Plot:",
                 choices = c("Total CIU Exonerations", "CIU Exonerations by State")
-              )
+              ),
+              helpText("Hover for details.")
             ),
 
 
@@ -290,6 +297,8 @@ ui <- fluidPage(
                 label = "Select Time Period:",
                 choices = levels(by_crime3$exonerated)
               ),
+              helpText("Hover for details."),
+              br(),
 
               checkboxInput("county", label = "Fill by county instead of crime type."),
               helpText("For the by-county plot: Since there are too many counties (especially 2013 onwards) for a legend to be helpful or visually significant, hover over the barplot to identify county and exoneration count instead.")
@@ -316,7 +325,8 @@ ui <- fluidPage(
                 inputId = "f",
                 label = "Select Basis for Exoneration:",
                 choices = levels(new1$x)
-              )
+              ),
+              helpText("Hover for details.")
             ),
 
             mainPanel(
@@ -347,9 +357,13 @@ server <- function(input, output) {
     # the plot title and subtitle, and in the details/instructions in the
     # sidebarPanels.
     
+    # I have also removed the legend formatting from the ggplot objects, because
+    # plotly doesn't recognise them. Instead, I have formatted the legends using
+    # plotly functions and arguments.
+    
     ply0 <- by_crime1 %>%
-      ggplot(aes_string("exonerated")) + geom_bar(aes_string(fill = input$a), width = 0.9) + theme_minimal() +
-      theme(legend.position = "bottom") +
+      ggplot(aes_string("exonerated")) + geom_bar(aes_string(fill = input$a), width = 0.9) + 
+      theme_minimal() +
       xlab("") + ylab("") + labs(fill = "")
     
     # In the plots where I keep the legend, I make them hozizonal and position
@@ -363,7 +377,8 @@ server <- function(input, output) {
                            x = 0.5,
                            y = -0.1, 
                            traceorder = "reversed",
-                           font = list(family = "sans-serif", size = 11))) %>%
+                           font = list(family = "sans-serif", size = 11))
+             ) %>%
       style(legendgroup = NULL)
     
     # The 'legendgroup = NULL' argument allows the elements of the now
@@ -420,6 +435,12 @@ server <- function(input, output) {
 
 
   output$PlotD <- renderPlotly({
+    
+    # In this tab, I filter specifically for 'CIU's, or Conviction Integrity
+    # Units, because of the findings of previous plots that lead me to examine
+    # the role of county-specific factors in specific kinds of exonerations —
+    # in this case, drug-related crime convicts were exonerated at much higher
+    # rates in Harris County, Texas, than anywhere else.
     
     if (input$total == "Total CIU Exonerations") {
       
@@ -529,12 +550,14 @@ server <- function(input, output) {
       left_join(t5, t4(), by = "race") %>%
         transmute(race = race, Total = n.x, Based = n.y) %>%
         gather("count.type", "Value", Total, Based)
+      
     })
 
 
     ply7 <- reactive({ 
       
       t7() %>%
+      mutate_if(is.numeric, round, 0) %>%
       ggplot(aes(race, Value)) + geom_bar(aes(fill = count.type), stat = "identity", position = "dodge") +
       xlab("") + ylab("") + theme_minimal() + 
       scale_fill_manual("", values = c("Total" = "royalblue1", "Based" = "orchid1")) +
@@ -544,11 +567,14 @@ server <- function(input, output) {
     
       ply7() %>%
       ggplotly(tooltip = c("Value")) %>%
+      style(hoverinfo = "x") %>%
       layout(legend = list(orientation = "h",  
                            xanchor = "center",
                            x = 0.5,
-                           y = -0.1, 
-                           font = list(family = "sans-serif", size = 11)))
+                           y = -0.1,
+                           font = list(family = "sans-serif", size = 11)),
+             xaxis = list("Value", hoverformat = '.0f')
+             )
   })
 }
 
