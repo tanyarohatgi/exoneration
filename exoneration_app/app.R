@@ -243,7 +243,8 @@ ui <- fluidPage(
             mainPanel(
               h4(strong("III. The Worst Crimes Exonerees Were Convicted For, by Race:")),
               h5("This graphic shows both convictions and exonerations by crime and state."),
-              plotlyOutput("PlotC")
+              plotlyOutput("PlotC"),
+              br()
             )
           )
         ),
@@ -429,7 +430,7 @@ server <- function(input, output) {
         count(tags) %>%
         mutate(Count = n) %>%
         mutate(Exonerated = exonerated) %>%
-        ggplot(aes_string("Exonerated")) + geom_line(aes_string(y = "Count"), size = 0.8, color = "orchid") +
+        ggplot(aes_string("Exonerated")) + geom_line(aes_string(y = "Count"), size = 0.8, alpha = 0.8, color = "orchid") +
         theme_minimal() +
         xlab("") + ylab("")
       
@@ -446,7 +447,7 @@ server <- function(input, output) {
         count(tags) %>%
         mutate(Count = n) %>%
         mutate(Exonerated = exonerated, State = state) %>%
-        ggplot(aes_string("Exonerated")) + geom_line(aes_string(y = "Count", color = "State"), size = 0.8) + 
+        ggplot(aes_string("Exonerated")) + geom_line(aes_string(y = "Count", color = "State"), size = 0.8, alpha = 0.8) + 
         theme_minimal() +
         xlab("") + ylab("") + labs(color = "")
       
