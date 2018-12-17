@@ -8,7 +8,7 @@
  
  Using [National Registry of Exonerations](http://www.law.umich.edu/special/exoneration/Pages/about.aspx) data, a University of Michigan Law School project, I found that:
   1. Over the last 4-5 years, there has been a massive increase in exonerations for those falsely convicted of drug-related offences, which has corresponded with a large spike in total exonerations.
-  2. These exonerations have largely been facilitated by the Conviction Integrity Unit in the prosecution office of Texas' Harris County, which pushed me to explore why.
+  2. These exonerations have largely been facilitated by the Conviction Integrity Unit (CIU) in the prosecution office of Texas' Harris County, which pushed me to explore why, and so look further into the recent phenomenon of CIU creation. 
   3. Official misconduct and false accusations played a greater role in the convictions of exonerees than factors such as erroneous DNA evidence or inadequate legal defense, although both the latter were present. Mistaken witness ID played a far greater role in sending black exonerees to prison than it did for any other race.
 
 
